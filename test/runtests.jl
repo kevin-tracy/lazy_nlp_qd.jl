@@ -8,6 +8,6 @@ import Random
 Random.seed!(1234)
 
 @testset "fmincon_sparse_tests" begin 
-    include("fmincon_sparse_tests.jl")
+    include("fmincon_sparse_test.jl")
 end
 

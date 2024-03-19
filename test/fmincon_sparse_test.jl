@@ -86,27 +86,28 @@ let
         h = h
     )
 
+    # initial guess
     x0 = .1*randn(nx)
 
 
-    x = sparse_fmincon(my_cost::Function,
-    my_cost_gradient!::Function,
-    my_constraint!::Function,
-    my_constraint_jacobian!::Function,
-    temp_con_jac,
-    x_l::Vector,
-    x_u::Vector,
-    c_l::Vector,
-    c_u::Vector,
-    x0::Vector,
-    params::NamedTuple;
-    tol = 1e-4,
-    c_tol = 1e-4,
-    max_iters = 1_000,
-    verbose = true)::Vector
+    x = lazy_nlp_qd.sparse_fmincon(my_cost::Function,
+                                   my_cost_gradient!::Function,
+                                   my_constraint!::Function,
+                                   my_constraint_jacobian!::Function,
+                                   temp_con_jac,
+                                   x_l::Vector,
+                                   x_u::Vector,
+                                   c_l::Vector,
+                                   c_u::Vector,
+                                   x0::Vector,
+                                   params::NamedTuple;
+                                   tol = 1e-4,
+                                   c_tol = 1e-4,
+                                   max_iters = 1_000,
+                                   verbose = true)
 
 
-    @assert norm(x - x_solution, Inf) < 1e-3
+    @test norm(x - x_solution, Inf) < 1e-3
 
 
 end
