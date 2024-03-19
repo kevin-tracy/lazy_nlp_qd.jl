@@ -2,9 +2,20 @@
 
 Quick and dirty Ipopt interface.
 
+## Install 
+```julia 
+import Pkg
+Pkg.add("https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
+```
+
 ## Quickstart 
 
 ```julia 
+using Test
+using LinearAlgebra
+using SparseArrays 
+import lazy_nlp_qd
+
 let 
 
 
