@@ -1,6 +1,4 @@
 
-
-# cartpole 
 function dynamics(params::NamedTuple, x::Vector, u)
     # cartpole ODE, parametrized by params. 
 
@@ -26,6 +24,7 @@ function dynamics(params::NamedTuple, x::Vector, u)
 
 end
 
+# vanilla rk4 explicit integrator 
 function rk4(params,x,u)
     dt = params.dt 
     k1 = dt * dynamics(params, x,        u)
@@ -52,7 +51,11 @@ function create_idx(nx,nu,N)
     return (nx=nx,nu=nu,N=N,nz=nz,nc=nc,x= x,u = u,c = c)
 end
 
+# user-defined functions for trajectory optimization 
+
+
 function cost(params, Z)
+    # return trajectory cost 
     Xref, Uref = params.Xref, params.Uref 
     idx = params.idx  
     Q, R, Qf = params.Q, params.R, params.Qf 
@@ -70,18 +73,21 @@ function cost(params, Z)
 end
 
 function cost_gradient!(params, grad, Z)
+    # calculate cost gradient and put it in grad 
     grad .= FD.gradient(_Z -> cost(params, _Z), Z)
     return nothing 
 end
 
 function constraint!(params, cval, Z)
+    # calculate constraint value and put it in cval 
     idx = params.idx 
     x0, xf = params.x0, params.xf 
     for i = 1:idx.N-1
         xi = Z[idx.x[i]]
         ui = Z[idx.u[i]]
         xi₊ = Z[idx.x[i+1]] 
-        cval[idx.c[i]] = xi₊ - rk4(params, xi,ui)
+        # you could put whatever integrator you wanted to here (implicit)
+        cval[idx.c[i]] = xi₊ - rk4(params, xi,ui) 
     end
     cval[idx.c[idx.N]] = Z[idx.x[1]] - x0
     cval[idx.c[idx.N+1]] = Z[idx.x[idx.N]] - xf
@@ -89,6 +95,7 @@ function constraint!(params, cval, Z)
 end
 
 function constraint_jacobian!(params, conjac, Z)
+    # calculate constraint jacobian and put it in conjac (a sparse matrix)
     idx = params.idx 
 
     for i = 1:idx.N-1
@@ -97,17 +104,13 @@ function constraint_jacobian!(params, conjac, Z)
         xi₊ = Z[idx.x[i+1]] 
         
         # diff the following constraint wrt xi, ui, xi₊
-        # c[idx.c[i]] = xi₊ - rk4(xi,ui,dt)
         conjac[idx.c[i],idx.x[i]] .= -FD.jacobian(_x->rk4(params, _x,ui),xi)
         conjac[idx.c[i],idx.u[i]] .= -FD.jacobian(_u->rk4(params, xi,_u),ui)
         conjac[idx.c[i],idx.x[i+1]] .= I(idx.nx)
     end
     
     # diff the initial and terminal condition constraints wrt x1 and xN respectively
-    # c[idx.c[idx.N]] = Z[idx.x[1]] - x0 
     conjac[idx.c[idx.N],idx.x[1]] .= I(idx.nx)
-    
-    # c[idx.c[idx.N+1]] = Z[idx.x[idx.N]] - xf
     conjac[idx.c[idx.N+1],idx.x[idx.N]] .= I(idx.nx)
 
     return nothing
@@ -154,21 +157,31 @@ let
         l = 0.5
     )
     
-    # TODO: primal bounds 
+    # primal bounds 
     x_l = -Inf * ones(idx.nz)
     x_u =  Inf * ones(idx.nz)
 
+    # constraint bounds 
     n_cons = (N + 1) * nx
     c_l = zeros(n_cons)
     c_u = zeros(n_cons)
 
+    # initial guess 
     Z0 = .01*randn(idx.nz)
+
+    # another way to initialize is 
+    # for i = 1:N-1
+    #     Z0[idx.x[i]] = # something 
+    #     Z0[idx.u[i]] = # something 
+    # end
+    # Z[idx.x[N]] = # something 
 
     # evaluate the constraint jacobian once to get the sparsity structure 
     temp_con_jac = spzeros(n_cons, idx.nz)
     constraint_jacobian!(params, temp_con_jac, Z0)
 
-    x = lazy_nlp_qd.sparse_fmincon(cost::Function,
+    # call ipopt
+    Z = lazy_nlp_qd.sparse_fmincon(cost::Function,
                                    cost_gradient!::Function,
                                    constraint!::Function,
                                    constraint_jacobian!::Function,
