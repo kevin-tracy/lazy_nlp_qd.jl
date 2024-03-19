@@ -11,3 +11,7 @@ Random.seed!(1234)
     include("fmincon_sparse_test.jl")
 end
 
+# @testset "fmincon_dense_tests" begin 
+#     include("fmincon_dense_test.jl")
+# end
+

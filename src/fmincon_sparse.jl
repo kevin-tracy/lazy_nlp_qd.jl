@@ -106,9 +106,10 @@ function sparse_fmincon(cost::Function,
     n_primals = length(x0)
     n_con = length(c_l)
     
-    # verbose && println("---------checking dimensions of everything----------")
+    verbose && println("---------checking dimensions of everything----------")
     @assert length(x0) == length(x_l) == length(x_u)
     @assert length(c_l) == length(c_u) == n_con
+    verbose && println("---------checking bounds----------------------------")
     @assert all(x_u .>= x_l)
     @assert all(c_u .>= c_l)
     
