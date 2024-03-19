@@ -53,7 +53,8 @@ let
 
     nx = 30 
     ny = 10 
-    nz = 20 
+    nz = 20
+    # check test/fmincon_sparse_test.jl for this function
     Q, q, A, b, G, h, x_solution = gen_sparse_qp(nx, ny, nz, 0.3)
 
     function my_cost(params, x)
