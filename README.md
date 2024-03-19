@@ -2,11 +2,13 @@
 
 Quick and dirty Ipopt interface.
 
+
 ## Install 
 ```julia 
 import Pkg
 Pkg.add("https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
 ```
+
 
 ## NLP Format 
 
@@ -19,6 +21,13 @@ $$
 $$
 
 where $f(x)$ is our cost and $c(x)$ is our constraint function. We can easily make equality constraints by setting the appropriate indices of $c_L[{\text{eqidx}}] =c_U[{\text{eqidx}}] $.
+
+
+## Examples 
+
+- `test/fmincon_sparse_test.jl` for a generic test (this is what the quickstart is)
+- `test/trajopt_test.jl` for a cartpole swingup test
+
 
 ## Quickstart 
 
