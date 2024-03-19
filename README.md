@@ -8,7 +8,39 @@ import Pkg
 Pkg.add("https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
 ```
 
+## NLP Format 
+
+$$
+\begin{align*}
+\underset{x}{\text{minimize}} & \quad f(x) \\
+\text{subject to} & \quad  x_L \leq x \leq x_U, \\
+                  & \quad  c_L \leq c(x) \leq c_U,
+\end{align*}
+$$
+
+where $f(x)$ is our cost and $c(x)$ is our constraint function. We can easily make equality constraints by setting the appropriate indices of $c_L[{\text{eqidx}}] =c_U[{\text{eqidx}}] $.
+
 ## Quickstart 
+
+Here we are going to solve the following QP:
+
+$$
+\begin{align*}
+\underset{x}{\text{minimize}} & \quad \frac{1}{2}x^TQx + q^Tx \\
+\text{subject to} & \quad Ax = b, \\
+                  & \quad Gx \leq h,
+\end{align*}
+$$
+
+by first converting it into our accepted format:
+
+$$
+\begin{align*}
+\underset{x}{\text{minimize}} & \quad \frac{1}{2}x^TQx + q^Tx \\
+\text{subject to} & \quad 0 \leq Ax - b \leq 0 , \\
+                  & \quad -\infty \leq Gx - h \leq 0,
+\end{align*}
+$$
 
 ```julia 
 using Test
@@ -21,7 +53,8 @@ let
 
     nx = 30 
     ny = 10 
-    nz = 20 
+    nz = 20
+    # check test/fmincon_sparse_test.jl for this function
     Q, q, A, b, G, h, x_solution = gen_sparse_qp(nx, ny, nz, 0.3)
 
     function my_cost(params, x)
@@ -67,7 +100,13 @@ let
     # initial guess
     x0 = .1*randn(nx)
 
-
+    """ we are solving the following problem:
+    
+        minimize_x        cost(x)
+        subject to        c_L <= constraint(x) <= c_U
+                          x_L <= x <= x_U
+    """
+ 
     x = lazy_nlp_qd.sparse_fmincon(my_cost::Function,
                                    my_cost_gradient!::Function,
                                    my_constraint!::Function,
