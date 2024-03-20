@@ -14,8 +14,10 @@ Pkg.add("https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
 ```
 
 
-## NLP Format 
+## NLP Formats 
 
+### Sparse 
+For sparse problems, we use the following NLP format:
 $$
 \begin{align*}
 \underset{x}{\text{minimize}} & \quad f(x) \\
@@ -26,6 +28,18 @@ $$
 
 where $f(x)$ is our cost and $c(x)$ is our constraint function. We can easily make equality constraints by setting the appropriate indices of $c_L[{\text{eqidx}}] =c_U[{\text{eqidx}}] $.
 
+### Sparse 
+For sparse problems, we use the following NLP format:
+$$
+\begin{align*}
+\underset{x}{\text{minimize}} & \quad f(x) \\
+\text{subject to} & \quad  x_L \leq x \leq x_U, \\
+                  & \quad  c_{eq}(x) = 0, \\ 
+                  & \quad  c_L \leq c_{ineq}(x) \leq c_U,
+\end{align*}
+$$
+
+where $f(x)$ is our cost and $c_{eq}(x)$ is our equality constraint function, and $c_{ineq}(x)$ is our inequality constraint function.
 
 ## Examples 
 
@@ -172,7 +186,7 @@ let
     x_l = -Inf * ones(nx)
     x_u =  Inf * ones(nx)
 
-    # constraint bounds 
+    # constraint bounds (for the inequality constraint)
     c_l = -Inf * ones(nz)
     c_u = zeros(nz)
 
