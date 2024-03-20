@@ -1,6 +1,10 @@
 # lazy_nlp_qd.jl
 
-Quick and dirty Ipopt interface.
+Quick and dirty Ipopt interface with methods for both sparse and dense problems. 
+
+This package exports the following two functions:
+- lazy_nlp_qd.fmincon_dense
+- lazy_nlp_qd.fmincon_sparse
 
 
 ## Install 
@@ -10,7 +14,11 @@ Pkg.add("https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
 ```
 
 
-## NLP Format 
+## NLP Formats 
+
+### Sparse
+
+For sparse problems, we use the following NLP format:
 
 $$
 \begin{align*}
@@ -22,14 +30,30 @@ $$
 
 where $f(x)$ is our cost and $c(x)$ is our constraint function. We can easily make equality constraints by setting the appropriate indices of $c_L[{\text{eqidx}}] =c_U[{\text{eqidx}}] $.
 
+### Dense
+
+For dense problems, we use the following NLP format:
+
+$$
+\begin{align*}
+\underset{x}{\text{minimize}} & \quad f(x) \\
+\text{subject to} & \quad  x_L \leq x \leq x_U, \\
+                  & \quad  c_{eq}(x) = 0, \\ 
+                  & \quad  c_L \leq c_{ineq}(x) \leq c_U,
+\end{align*}
+$$
+
+
+where $f(x)$ is our cost and $c_{eq}(x)$ is our equality constraint function, and $c_{ineq}(x)$ is our inequality constraint function.
 
 ## Examples 
 
-- `test/fmincon_sparse_test.jl` for a generic test (this is what the quickstart is)
-- `test/trajopt_test.jl` for a cartpole swingup test
+- `test/fmincon_dense_test.jl` for a generic dense example
+- `test/fmincon_sparse_test.jl` for a generic sparse example (this is what the quickstart is)
+- `test/trajopt_test.jl` for a sparse trajopt example
 
 
-## Quickstart 
+## Quickstart (sparse)
 
 Here we are going to solve the following QP:
 
@@ -58,8 +82,6 @@ using SparseArrays
 import lazy_nlp_qd
 
 let 
-
-
     nx = 30 
     ny = 10 
     nz = 20
@@ -132,9 +154,80 @@ let
                                    max_iters = 1_000,
                                    verbose = true)
 
+    @test norm(x - x_solution, Inf) < 1e-3
+end
+```
+
+## Quickstart (dense)
+
+```julia
+using Test
+using LinearAlgebra
+using SparseArrays 
+import lazy_nlp_qd
+
+let 
+    nx = 30 
+    ny = 10 
+    nz = 20 
+    Q, q, A, b, G, h, x_solution = gen_sparse_qp(nx, ny, nz, 1.0)
+    Q = Matrix(Q)
+    A = Matrix(A)
+    G = Matrix(G)
+
+    function my_cost(params, x)
+        return .5*x'*params.Q*x + params.q'x 
+    end
+
+    function my_equality_constraint(params, x)
+        return params.A*x - params.b 
+    end
+
+    function my_inequality_constraint(params, x)
+        return params.G*x - params.h
+    end
+
+    # primal variable bounds 
+    x_l = -Inf * ones(nx)
+    x_u =  Inf * ones(nx)
+
+    # constraint bounds (for the inequality constraint)
+    c_l = -Inf * ones(nz)
+    c_u = zeros(nz)
+
+    # sparse jacobian matrix with correct sparsity pattern
+    temp_con_jac = sparse([A;G])
+    
+    # things I need for my functions 
+    params = (
+        Q = Q, 
+        q = q, 
+        A = A, 
+        b = b, 
+        G = G, 
+        h = h
+    )
+
+    # initial guess
+    x0 = .1*randn(nx)
+
+    diff_type = :auto # or :finite for finite diff 
+
+    x = lazy_nlp_qd.fmincon_dense(my_cost::Function,
+                                  my_equality_constraint::Function,
+                                  my_inequality_constraint::Function,
+                                  x_l::Vector,
+                                  x_u::Vector,
+                                  c_l::Vector,
+                                  c_u::Vector,
+                                  x0::Vector,
+                                  params::NamedTuple,
+                                  diff_type::Symbol;
+                                  tol = 1e-4,
+                                  c_tol = 1e-4,
+                                  max_iters = 1_000,
+                                  verbose = true)
 
     @test norm(x - x_solution, Inf) < 1e-3
-
-
 end
 ```
