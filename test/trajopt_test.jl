@@ -45,8 +45,8 @@ function create_idx(nx,nu,N)
     u = [(i - 1) * (nx + nu) .+ ((nx + 1):(nx + nu)) for i = 1:(N - 1)]
     
     # constraint indexing for the (N-1) dynamics constraints when stacked up
-    c = [(i - 1) * (nx) .+ (1 : nx) for i = 1:(N + 1)]
-    nc = (N + 1) * nx # (N-1)*nx 
+    c = [(i - 1) * (nx) .+ (1 : nx) for i = 1:(N - 1)]
+    nc = (N - 1) * nx # (N-1)*nx 
     
     return (nx=nx,nu=nu,N=N,nz=nz,nc=nc,x= x,u = u,c = c)
 end
@@ -81,7 +81,7 @@ end
 function constraint!(params, cval, Z)
     # calculate constraint value and put it in cval 
     idx = params.idx 
-    x0, xf = params.x0, params.xf 
+    # x0, xf = params.x0, params.xf 
     for i = 1:idx.N-1
         xi = Z[idx.x[i]]
         ui = Z[idx.u[i]]
@@ -89,8 +89,10 @@ function constraint!(params, cval, Z)
         # you could put whatever integrator you wanted to here (implicit)
         cval[idx.c[i]] = xi₊ - rk4(params, xi,ui) 
     end
-    cval[idx.c[idx.N]] = Z[idx.x[1]] - x0
-    cval[idx.c[idx.N+1]] = Z[idx.x[idx.N]] - xf
+
+    # DEPRECATED: I moved these constraints to the primal variable bounds 
+    # cval[idx.c[idx.N]] = Z[idx.x[1]] - x0
+    # cval[idx.c[idx.N+1]] = Z[idx.x[idx.N]] - xf
     return nothing 
 end
 
@@ -109,9 +111,10 @@ function constraint_jacobian!(params, conjac, Z)
         conjac[idx.c[i],idx.x[i+1]] .= I(idx.nx)
     end
     
+    # DEPRECATED: I moved these constraints to the primal variable bounds 
     # diff the initial and terminal condition constraints wrt x1 and xN respectively
-    conjac[idx.c[idx.N],idx.x[1]] .= I(idx.nx)
-    conjac[idx.c[idx.N+1],idx.x[idx.N]] .= I(idx.nx)
+    # conjac[idx.c[idx.N],idx.x[1]] .= I(idx.nx)
+    # conjac[idx.c[idx.N+1],idx.x[idx.N]] .= I(idx.nx)
 
     return nothing
 end
@@ -158,18 +161,41 @@ let
     )
     
     # primal bounds 
-    x_l = -Inf * ones(idx.nz)
-    x_u =  Inf * ones(idx.nz)
+    x_min = -150 * ones(nx)
+    x_max = +150 * ones(nx)
+    u_min = -40 * ones(nu)
+    u_max = +40 * ones(nu)
+
+    Z_l = -Inf * ones(idx.nz)
+    Z_u =  Inf * ones(idx.nz)
+
+    # initial condition constraint 
+    Z_l[idx.x[1]] = x0 
+    Z_u[idx.x[1]] = x0 
+
+    for i = 1:N-1 
+        Z_l[idx.u[i]] = u_min 
+        Z_u[idx.u[i]] = u_max 
+    end
+    for i = 2:N-1 
+        Z_l[idx.x[i]] = x_min 
+        Z_u[idx.x[i]] = x_max 
+    end
+
+    # terminal condition constraint 
+    Z_l[idx.x[N]] = xf 
+    Z_u[idx.x[N]] = xf 
+
 
     # constraint bounds 
-    n_cons = (N + 1) * nx
+    n_cons = (N - 1) * nx
     c_l = zeros(n_cons)
     c_u = zeros(n_cons)
 
     # initial guess 
     Z0 = .01*randn(idx.nz)
 
-    # another way to initialize is 
+    # an intelligent way to initialize is 
     # for i = 1:N-1
     #     Z0[idx.x[i]] = # something 
     #     Z0[idx.u[i]] = # something 
@@ -186,8 +212,8 @@ let
                                    constraint!::Function,
                                    constraint_jacobian!::Function,
                                    temp_con_jac,
-                                   x_l::Vector,
-                                   x_u::Vector,
+                                   Z_l::Vector,
+                                   Z_u::Vector,
                                    c_l::Vector,
                                    c_u::Vector,
                                    Z0::Vector,
@@ -196,6 +222,14 @@ let
                                    c_tol = 1e-4,
                                    max_iters = 1_000,
                                    verbose = true)
+
+
+    X = [Z[idx_x] for idx_x in idx.x]
+    U = [Z[idx_u] for idx_u in idx.u]
+
+    # this is how you would plot it 
+    # display(Plots.plot(hcat(X...)'))
+    
 end
 
 
