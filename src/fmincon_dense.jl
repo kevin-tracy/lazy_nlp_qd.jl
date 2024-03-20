@@ -67,11 +67,11 @@ function sparsity_hessian(n,m)
     return collect(zip(row,col))
 end
 
-function MOI.eval_objective(prob::MOI.AbstractNLPEvaluator, x)
+function MOI.eval_objective(prob::ProblemMOI, x)
     prob.cost(prob.params, x)
 end
 
-function MOI.eval_objective_gradient(prob::MOI.AbstractNLPEvaluator, grad_f, x)
+function MOI.eval_objective_gradient(prob::ProblemMOI, grad_f, x)
     _cost(_x) = prob.cost(prob.params, _x)
     if prob.diff_type == :auto 
         ForwardDiff.gradient!(grad_f,_cost,x)
@@ -81,12 +81,12 @@ function MOI.eval_objective_gradient(prob::MOI.AbstractNLPEvaluator, grad_f, x)
     return nothing
 end
 
-function MOI.eval_constraint(prob::MOI.AbstractNLPEvaluator,c,x)
+function MOI.eval_constraint(prob::ProblemMOI,c,x)
     c .= prob.con(prob.params, x)
     return nothing
 end
 
-function MOI.eval_constraint_jacobian(prob::MOI.AbstractNLPEvaluator, jac, x)
+function MOI.eval_constraint_jacobian(prob::ProblemMOI, jac, x)
     _con(_x) = prob.con(prob.params, _x)
     if prob.diff_type == :auto 
         reshape(jac,prob.m_nlp,prob.n_nlp) .= ForwardDiff.jacobian(_con, x)
@@ -96,12 +96,12 @@ function MOI.eval_constraint_jacobian(prob::MOI.AbstractNLPEvaluator, jac, x)
     return nothing
 end
 
-function MOI.features_available(prob::MOI.AbstractNLPEvaluator)
+function MOI.features_available(prob::ProblemMOI)
     return [:Grad, :Jac]
 end
 
-MOI.initialize(prob::MOI.AbstractNLPEvaluator, features) = nothing
-MOI.jacobian_structure(prob::MOI.AbstractNLPEvaluator) = prob.sparsity_jac
+MOI.initialize(prob::ProblemMOI, features) = nothing
+MOI.jacobian_structure(prob::ProblemMOI) = prob.sparsity_jac
 
 
 """
@@ -123,10 +123,10 @@ cost weights, dynamics parameters, etc.).
 args:
     cost::Function                    - objective function to be minimzed (returns scalar)
     equality_constraint::Function     - c_eq(params, x) == 0 
-    inequality_constraint::Function   - c_l <= c_ineq(params, x) c_u 
+    inequality_constraint::Function   - c_l <= c_ineq(params, x) <= c_u 
     x_l::Vector                       - x_l <= x <= x_u 
     x_u::Vector                       - x_l <= x <= x_u 
-    c_l::Vector                       - c_l <= c_ineq(params, x) <= x_u 
+    c_l::Vector                       - c_l <= c_ineq(params, x) <= c_u 
     c_u::Vector                       - c_l <= c_ineq(params, x) <= x_u 
     x0::Vector                        - initial guess 
     params::NamedTuple                - problem parameters for use in costs/constraints 

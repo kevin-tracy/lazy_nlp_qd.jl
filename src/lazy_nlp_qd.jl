@@ -15,8 +15,8 @@ include("fmincon_sparse.jl")
 
 export sparse_fmincon
 
-# include("fmincon_dense.jl")
+include("fmincon_dense.jl")
 
-# export dense_fmincon
+export dense_fmincon
 
 end # module lazy_nlp_qd

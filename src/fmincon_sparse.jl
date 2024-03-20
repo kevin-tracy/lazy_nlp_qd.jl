@@ -51,22 +51,22 @@ function SparseProblemMOI(n_nlp,
 end
 
 
-function MOI.eval_objective(prob::MOI.AbstractNLPEvaluator, x)
+function MOI.eval_objective(prob::SparseProblemMOI, x)
     prob.cost(prob.params, x)
 end
 
-function MOI.eval_objective_gradient(prob::MOI.AbstractNLPEvaluator, grad_f, x)
+function MOI.eval_objective_gradient(prob::SparseProblemMOI, grad_f, x)
     prob.cost_gradient!(prob.params, grad_f, x)
     return nothing 
 end
 
-function MOI.eval_constraint(prob::MOI.AbstractNLPEvaluator,c,x)
+function MOI.eval_constraint(prob::SparseProblemMOI,c,x)
     prob.constraint!(prob.params, c, x)
     # c .= prob.con(prob.params, x)
     return nothing
 end
 
-function MOI.eval_constraint_jacobian(prob::MOI.AbstractNLPEvaluator, jac, x)
+function MOI.eval_constraint_jacobian(prob::SparseProblemMOI, jac, x)
     # evaluate the con jac and put it in prob.params.temp_jac 
 
     prob.constraint_jacobian!(prob.params, prob.temp_con_jac, x)
@@ -75,12 +75,12 @@ function MOI.eval_constraint_jacobian(prob::MOI.AbstractNLPEvaluator, jac, x)
     return nothing 
 end
 
-function MOI.features_available(prob::MOI.AbstractNLPEvaluator)
+function MOI.features_available(prob::SparseProblemMOI)
     return [:Grad, :Jac]
 end
 
-MOI.initialize(prob::MOI.AbstractNLPEvaluator, features) = nothing
-MOI.jacobian_structure(prob::MOI.AbstractNLPEvaluator) = prob.sparsity_jac
+MOI.initialize(prob::SparseProblemMOI, features) = nothing
+MOI.jacobian_structure(prob::SparseProblemMOI) = prob.sparsity_jac
 
 function get_sparsity_pattern(jac)
     jac_rows, jac_cols, _ = findnz(jac)

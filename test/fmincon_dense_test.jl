@@ -60,7 +60,7 @@ let
     end
 
     function my_inequality_constraint(params, x)
-        return params.g*x - params.h
+        return params.G*x - params.h
     end
 
     
@@ -69,8 +69,8 @@ let
     x_u =  Inf * ones(nx)
 
     # constraint bounds 
-    c_l = [zeros(ny); -Inf * ones(nz)]
-    c_u = [zeros(ny); zeros(nz)]
+    c_l = -Inf * ones(nz)
+    c_u = zeros(nz)
 
     # sparse jacobian matrix with correct sparsity pattern
     temp_con_jac = sparse([A;G])
@@ -89,9 +89,11 @@ let
     x0 = .1*randn(nx)
 
 
-    x = lazy_nlp_qd.fmincon_dense(cost::Function,
-                                  equality_constraint::Function,
-                                  inequality_constraint::Function,
+    diff_type = :auto 
+
+    x = lazy_nlp_qd.fmincon_dense(my_cost::Function,
+                                  my_equality_constraint::Function,
+                                  my_inequality_constraint::Function,
                                   x_l::Vector,
                                   x_u::Vector,
                                   c_l::Vector,
