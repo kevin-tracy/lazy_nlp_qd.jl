@@ -12,9 +12,9 @@ MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-FiniteDiff = "2.23"
+FiniteDiff = "2"
 ForwardDiff = "0.10"
-Ipopt = "1.6"
-MathOptInterface = "1.27"
+Ipopt = "1"
+MathOptInterface = "1"
 SparseArrays = "1"
 julia = "1"
