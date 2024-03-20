@@ -3,8 +3,8 @@
 Quick and dirty Ipopt interface with methods for both sparse and dense problems. 
 
 This package exports the following two functions:
-- lazy_nlp_qd.fmincon_dense
-- lazy_nlp_qd.fmincon_sparse
+- `lazy_nlp_qd.fmincon_dense`
+- `lazy_nlp_qd.fmincon_sparse`
 
 
 ## Install 
