@@ -10,7 +10,7 @@ This package exports the following two functions:
 ## Install 
 ```julia 
 import Pkg
-Pkg.add("https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
+Pkg.add(url="https://github.com/kevin-tracy/lazy_nlp_qd.jl.git")
 ```
 
 
