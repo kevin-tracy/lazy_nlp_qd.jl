@@ -101,10 +101,12 @@ function sparse_fmincon(cost::Function,
                         tol = 1e-4,
                         c_tol = 1e-4,
                         max_iters = 1_000,
-                        verbose = true)::Vector
+                        print_level = 5)::Vector
     
     n_primals = length(x0)
     n_con = length(c_l)
+
+    verbose = print_level > 0 
     
     verbose && println("---------checking dimensions of everything----------")
     @assert length(x0) == length(x_l) == length(x_u)
@@ -134,7 +136,7 @@ function sparse_fmincon(cost::Function,
     solver.options["constr_viol_tol"] = c_tol
     
     if verbose 
-        solver.options["print_level"] = 5
+        solver.options["print_level"] = print_level
     else
         solver.options["print_level"] = 0 
     end
