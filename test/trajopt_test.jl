@@ -221,7 +221,7 @@ let
                                    tol = 1e-4,
                                    c_tol = 1e-4,
                                    max_iters = 1_000,
-                                   verbose = true)
+                                   print_level = 5)
 
 
     X = [Z[idx_x] for idx_x in idx.x]
