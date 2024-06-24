@@ -108,10 +108,10 @@ function sparse_fmincon(cost::Function,
 
     verbose = print_level > 0 
     
-    verbose && println("---------checking dimensions of everything----------")
+    verbose && println("-----------------checking dimensions of everything-------------\n")
     @assert length(x0) == length(x_l) == length(x_u)
     @assert length(c_l) == length(c_u) == n_con
-    verbose && println("---------checking bounds----------------------------")
+    verbose && println("-----------------checking primal bounds------------------------\n")
     @assert all(x_u .>= x_l)
     @assert all(c_u .>= c_l)
     
@@ -150,7 +150,7 @@ function sparse_fmincon(cost::Function,
     end
 
     # Solve the problem
-    verbose && println("---------IPOPT beginning solve----------------------")
+    verbose && println("-----------------IPOPT beginning solve-------------------------\n")
 
     MOI.set(solver, MOI.NLPBlock(), block_data)
     MOI.set(solver, MOI.ObjectiveSense(), MOI.MIN_SENSE)
