@@ -104,7 +104,7 @@ let
                                    tol = 1e-4,
                                    c_tol = 1e-4,
                                    max_iters = 1_000,
-                                   verbose = true)
+                                   print_level = 5)
 
 
     @test norm(x - x_solution, Inf) < 1e-3
